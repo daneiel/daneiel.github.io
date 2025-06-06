@@ -1,0 +1,41 @@
+# Bem-vindo ao Jekyll!
+#
+# Este arquivo de configuração pode ser usado para definir variáveis globais do site.
+# https://jekyllrb.com/docs/configuration/
+
+# --- Configurações Principais ---
+title: Daniel Souza | Tech Lead (ex: Desenvolvedor & Artista)
+email: daneoliveira.s@gmail.com
+description: >- # A descrição que aparecerá no Google.
+  Desenvolvedor de software, forte experiência como analista de sistemas, trabalhando em vários projetos e diversos tipos de negócios. Envolvido em todos os ciclos de vida, incluindo análise de requisitos, planejamento, design, codificação, teste, implementação, documentação e suporte.
+
+  Conhecimentos em:
+  • Linguagens de Programação: Java, Node, Python.
+  • Banco de Dados: ORACLE, MYSQL e SQL Server, Postgres.
+  • Análise de Sistemas: Levantamento de Requisitos, Elaboração de documentação de Use Case e Diagramas UML, Modelagem de Banco de Dados, Desenho de arquiteturas AWS.
+  
+  Tutor de dois lindos cachorro e casado com uma maravilhosa esposa, eterno aspirante a musico e sempre em busca de aprender.
+url: "https://daneiel.github.io" # A URL final do seu site. MUITO IMPORTANTE.
+github_username: daneiel
+linkedin_username: daneesouza
+
+# --- Build ---
+# Escolha um tema. Você pode começar com o padrão do GitHub ou adicionar um tema como minimal-mistakes-jekyll.
+# theme: jekyll-theme-minimal
+# Se for usar um tema mais avançado como o Minimal Mistakes, a instalação é um pouco diferente.
+# Por agora, podemos deixar sem tema para focar na estrutura.
+
+# --- Navegação (Exemplo, depende do tema) ---
+# Esta parte será muito customizada dependendo do tema escolhido.
+# Por enquanto, é apenas um placeholder conceitual.
+navigation:
+  - title: Home
+    url: /
+  - title: Sobre
+    url: /sobre/
+  - title: Portfólio
+    url: /portfolio/
+  - title: Hobbies
+    url: /hobbies/
+  - title: Contato
+    url: /contato/ # Pode ser uma seção na página "Sobre" ou uma página própria
