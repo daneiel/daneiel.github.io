@@ -4,7 +4,7 @@
 # https://jekyllrb.com/docs/configuration/
 
 # --- Configurações Principais ---
-title: Daniel Souza | Tech Lead (ex: Desenvolvedor & Artista)
+title: Daniel Souza | Tech Lead
 email: daneoliveira.s@gmail.com
 description: >- # A descrição que aparecerá no Google.
   Desenvolvedor de software, forte experiência como analista de sistemas, trabalhando em vários projetos e diversos tipos de negócios. Envolvido em todos os ciclos de vida, incluindo análise de requisitos, planejamento, design, codificação, teste, implementação, documentação e suporte.
@@ -21,7 +21,7 @@ linkedin_username: daneesouza
 
 # --- Build ---
 # Escolha um tema. Você pode começar com o padrão do GitHub ou adicionar um tema como minimal-mistakes-jekyll.
-# theme: jekyll-theme-minimal
+theme: jekyll-theme-minimal
 # Se for usar um tema mais avançado como o Minimal Mistakes, a instalação é um pouco diferente.
 # Por agora, podemos deixar sem tema para focar na estrutura.
 
