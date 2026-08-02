@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark" data-section="hero">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daniel Souza — Engenharia de Software</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=Inter:wght@350;400;450;500&family=JetBrains+Mono:wght@400;500&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     ESTILO DANI v1 — tokens
+     noite: mocha-aurora · dia: papel-pastel (kindle)
+     ============================================================ */
+  :root{
+    /* acentos por seção — a paleta viaja pela navegação */
+    --acc-d:#cba6f7; --acc-l:#8a6fae;          /* hero: mauve   */
+    --dur-shift:.9s;
+  }
+  html[data-section="projetos"]{ --acc-d:#fab387; --acc-l:#b3703f; } /* peach */
+  html[data-section="sobre"]   { --acc-d:#94e2d5; --acc-l:#49766c; } /* teal  */
+  html[data-section="sistema"] { --acc-d:#a6e3a1; --acc-l:#5f7d4e; } /* green */
+  html[data-section="contato"] { --acc-d:#b4befe; --acc-l:#6a6f9e; } /* lavender */
+
+  html[data-theme="dark"]{
+    --bg:#1e1e2e; --bg-deep:#181825; --surface:#313244;
+    --line:#31324488; --text:#cdd6f4; --muted:#a6adc8; --faint:#6c7086;
+    --accent:var(--acc-d);
+    --aurora-a:#cba6f71f; --aurora-b:#94e2d51a; --aurora-c:#fab38714;
+    --sel-bg:#cba6f733;
+  }
+  html[data-theme="light"]{
+    --bg:#f3ebdd; --bg-deep:#ece2cf; --surface:#e4d8c2;
+    --line:#d8c9ad; --text:#453a2e; --muted:#77685a; --faint:#a1917e;
+    --accent:var(--acc-l);
+    --aurora-a:#c9a86a14; --aurora-b:#8a6fae10; --aurora-c:#b3703f0e;
+    --sel-bg:#c9a86a4d;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  ::selection{ background:var(--sel-bg); }
+
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif; font-weight:350;
+    line-height:1.7; letter-spacing:.01em;
+    transition:background var(--dur-shift) ease, color var(--dur-shift) ease;
+    min-height:100vh; overflow-x:hidden;
+  }
+
+  /* ---------- aurora: luz difusa, nunca espetáculo ---------- */
+  .aurora{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .aurora i{
+    position:absolute; border-radius:50%; filter:blur(90px);
+    transition:background var(--dur-shift) ease;
+  }
+  .aurora i:nth-child(1){ width:55vw; height:55vw; top:-18vw; right:-12vw; background:radial-gradient(circle, var(--aurora-a), transparent 65%); animation:drift1 70s ease-in-out infinite alternate; }
+  .aurora i:nth-child(2){ width:45vw; height:45vw; bottom:-10vw; left:-14vw; background:radial-gradient(circle, var(--aurora-b), transparent 65%); animation:drift2 90s ease-in-out infinite alternate; }
+  .aurora i:nth-child(3){ width:34vw; height:34vw; top:44%; left:56%; background:radial-gradient(circle, var(--aurora-c), transparent 65%); animation:drift1 110s ease-in-out infinite alternate-reverse; }
+  @keyframes drift1{ to{ transform:translate(-6vw,5vh) scale(1.12); } }
+  @keyframes drift2{ to{ transform:translate(7vw,-6vh) scale(.94); } }
+
+  main{ position:relative; z-index:1; }
+
+  /* ---------- navegação: técnica, limpa, mono ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.1rem clamp(1.25rem,4vw,3rem);
+    font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase;
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+    transition:background var(--dur-shift) ease, border-color var(--dur-shift) ease;
+  }
+  nav .brand{ color:var(--accent); transition:color var(--dur-shift) ease; font-weight:500; }
+  nav ul{ display:flex; gap:clamp(.9rem,2.5vw,2rem); list-style:none; }
+  nav a{
+    color:var(--muted); text-decoration:none; position:relative; padding:.2rem 0;
+    transition:color .35s ease;
+  }
+  nav a::after{
+    content:""; position:absolute; left:0; bottom:-2px; height:1px; width:100%;
+    background:var(--accent); transform:scaleX(0); transform-origin:left;
+    transition:transform .45s cubic-bezier(.22,1,.36,1), background var(--dur-shift) ease;
+  }
+  nav a:hover{ color:var(--text); }
+  nav a:hover::after{ transform:scaleX(1); }
+
+  /* toggle de tema — o momento-assinatura */
+  #theme-toggle{
+    cursor:pointer; border:1px solid var(--line); background:transparent;
+    color:var(--text); width:2.2rem; height:2.2rem; border-radius:50%;
+    display:grid; place-items:center; font-size:.85rem;
+    transition:border-color .35s, color .35s, transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  #theme-toggle:hover{ border-color:var(--accent); color:var(--accent); transform:rotate(40deg) scale(1.08); }
+  #theme-toggle:active{ transform:scale(.92); }
+
+  /* ---------- layout ---------- */
+  section{ max-width:44rem; margin:0 auto; padding:0 1.5rem; }
+  .kicker{
+    font-family:'JetBrains Mono',monospace; font-size:.7rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--accent);
+    transition:color var(--dur-shift) ease;
+    display:flex; align-items:center; gap:.75rem;
+  }
+  .kicker::before{ content:""; width:2.2rem; height:1px; background:var(--accent); transition:background var(--dur-shift) ease; }
+
+  /* ---------- hero: a tipografia é o conteúdo ---------- */
+  #hero{ min-height:92vh; display:flex; flex-direction:column; justify-content:center; gap:1.6rem; padding-top:5rem; }
+  #hero h1{
+    font-family:'Newsreader',serif; font-weight:400; font-size:clamp(2.8rem,8.5vw,5.4rem);
+    line-height:1.06; letter-spacing:-.015em;
+  }
+  #hero h1 em{ font-style:italic; font-weight:300; color:var(--accent); transition:color var(--dur-shift) ease; }
+  #hero p{ max-width:32rem; color:var(--muted); font-size:1.02rem; }
+  #hero .hint{ font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--faint); letter-spacing:.1em; margin-top:2.5rem; }
+
+  /* ---------- seções ---------- */
+  .block{ padding:7rem 1.5rem; }
+  .block h2{
+    font-family:'Newsreader',serif; font-weight:400; font-size:clamp(1.9rem,4.5vw,2.6rem);
+    letter-spacing:-.01em; margin:1.1rem 0 2.6rem;
+  }
+
+  /* projetos: linhas tipográficas, sem imagens */
+  .projeto{
+    display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:1.2rem;
+    padding:1.5rem 0; border-top:1px solid var(--line); cursor:default;
+    transition:border-color var(--dur-shift) ease;
+  }
+  .projeto:last-of-type{ border-bottom:1px solid var(--line); }
+  .projeto .num{
+    font-family:'JetBrains Mono',monospace; font-size:.7rem; color:var(--faint);
+    transition:color .4s ease;
+  }
+  .projeto h3{
+    font-family:'Newsreader',serif; font-weight:400; font-size:1.55rem; letter-spacing:-.01em;
+    transition:transform .5s cubic-bezier(.22,1,.36,1), color .4s ease;
+  }
+  .projeto .ano{ font-family:'JetBrains Mono',monospace; font-size:.7rem; color:var(--faint); }
+  .projeto .desc{
+    grid-column:2/4; display:grid; grid-template-rows:0fr; overflow:hidden;
+    transition:grid-template-rows .55s cubic-bezier(.22,1,.36,1), opacity .45s ease .05s;
+    opacity:0; color:var(--muted); font-size:.92rem;
+  }
+  .projeto .desc>div{ min-height:0; }
+  .projeto .stack{
+    font-family:'JetBrains Mono',monospace; font-size:.68rem; letter-spacing:.08em;
+    color:var(--accent); transition:color var(--dur-shift) ease; display:block; margin-top:.5rem;
+  }
+  .projeto:hover .num{ color:var(--accent); }
+  .projeto:hover h3{ transform:translateX(.4rem); }
+  .projeto:hover .desc{ grid-template-rows:1fr; opacity:1; }
+
+  /* sobre */
+  #sobre p{ color:var(--muted); max-width:36rem; }
+  #sobre p+p{ margin-top:1.2rem; }
+  #sobre strong{ color:var(--text); font-weight:450; }
+  .trajetoria{
+    list-style:none; margin-top:2.4rem; max-width:34rem;
+    font-size:.92rem; color:var(--muted);
+  }
+  .trajetoria li{
+    display:flex; gap:1.4rem; align-items:baseline;
+    padding:.7rem 0; border-top:1px solid var(--line);
+    transition:border-color var(--dur-shift) ease, color .3s ease;
+  }
+  .trajetoria li:hover{ color:var(--text); }
+  .trajetoria li span{
+    font-family:'JetBrains Mono',monospace; font-size:.68rem; letter-spacing:.08em;
+    color:var(--accent); min-width:4.6rem; transition:color var(--dur-shift) ease;
+  }
+  a.inline{
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent;
+    transition:color var(--dur-shift) ease, border-color .3s ease;
+  }
+  a.inline:hover{ border-color:var(--accent); }
+
+  /* sistema: os tokens visíveis */
+  .tokens{ display:grid; grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr)); gap:.9rem; }
+  .token{
+    border:1px solid var(--line); border-radius:.55rem; overflow:hidden;
+    transition:border-color var(--dur-shift) ease, transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .token:hover{ transform:translateY(-3px); border-color:var(--accent); }
+  .token .chip{ height:3.4rem; transition:background var(--dur-shift) ease; }
+  .token .label{
+    font-family:'JetBrains Mono',monospace; font-size:.62rem; letter-spacing:.06em;
+    color:var(--muted); padding:.55rem .7rem; display:block;
+  }
+  .nota-sistema{ margin-top:2rem; font-size:.9rem; color:var(--faint); max-width:34rem; }
+
+  /* contato + rodapé 8-bit */
+  #contato .links{ display:flex; flex-wrap:wrap; gap:2rem; margin-top:.5rem;
+    font-family:'JetBrains Mono',monospace; font-size:.78rem; letter-spacing:.1em; }
+  #contato .links a{ color:var(--muted); text-decoration:none; transition:color .3s ease; }
+  #contato .links a:hover{ color:var(--accent); }
+  footer{
+    text-align:center; padding:3.5rem 1rem 2.5rem;
+    font-family:'Silkscreen',monospace; font-size:.6rem; letter-spacing:.18em;
+    color:var(--faint); transition:color var(--dur-shift) ease;
+  }
+  footer .pix{ color:var(--accent); transition:color var(--dur-shift) ease; }
+
+  /* ---------- trilho de tokens: o sistema à vista em toda a rolagem ---------- */
+  .token-rail{
+    position:fixed; right:clamp(.8rem,2vw,1.6rem); top:50%; transform:translateY(-50%);
+    z-index:9; display:flex; flex-direction:column; align-items:center; gap:.55rem;
+  }
+  .token-rail .dot{
+    width:.62rem; height:.62rem; border-radius:50%; border:none; cursor:pointer; padding:0;
+    opacity:.45; transform:scale(1);
+    transition:opacity .4s ease, transform .45s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease, background var(--dur-shift) ease;
+  }
+  .token-rail .dot:hover{ opacity:.85; transform:scale(1.25); }
+  .token-rail .dot.ativo{
+    opacity:1; transform:scale(1.35);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  [data-theme="dark"] .dot-hero{background:#cba6f7} [data-theme="light"] .dot-hero{background:#8a6fae}
+  [data-theme="dark"] .dot-projetos{background:#fab387} [data-theme="light"] .dot-projetos{background:#b3703f}
+  [data-theme="dark"] .dot-sobre{background:#94e2d5} [data-theme="light"] .dot-sobre{background:#49766c}
+  [data-theme="dark"] .dot-sistema{background:#a6e3a1} [data-theme="light"] .dot-sistema{background:#5f7d4e}
+  [data-theme="dark"] .dot-contato{background:#b4befe} [data-theme="light"] .dot-contato{background:#6a6f9e}
+  .token-rail .sep{ width:1px; height:1.4rem; background:var(--line); transition:background var(--dur-shift) ease; }
+  .token-rail .chip-mini{
+    width:.62rem; height:.62rem; border-radius:.18rem; border:1px solid var(--line);
+    transition:background var(--dur-shift) ease, border-color var(--dur-shift) ease;
+  }
+  .token-rail .hex{
+    font-family:'JetBrains Mono',monospace; font-size:.56rem; letter-spacing:.12em;
+    color:var(--faint); writing-mode:vertical-rl; margin-top:.3rem;
+    transition:color var(--dur-shift) ease;
+  }
+  @media (max-width:700px){
+    .token-rail{
+      right:auto; top:auto; transform:none; bottom:.9rem; left:50%; translate:-50% 0;
+      flex-direction:row; gap:.6rem;
+      background:color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter:blur(10px); padding:.5rem .8rem; border-radius:2rem; border:1px solid var(--line);
+    }
+    .token-rail .sep{ width:1.4rem; height:1px; }
+    .token-rail .hex{ writing-mode:horizontal-tb; margin-top:0; }
+  }
+
+  /* ---------- transição de tema: revelação circular ---------- */
+  ::view-transition-old(root), ::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition-duration:.01s !important; }
+    html{ scroll-behavior:auto; }
+  }
+  @media (max-width:600px){
+    nav ul{ display:none; }
+    .projeto{ grid-template-columns:auto 1fr; }
+    .projeto .ano{ display:none; }
+    .projeto .desc{ grid-column:1/3; }
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<aside class="token-rail" aria-label="Tokens do sistema">
+  <button class="dot dot-hero"     data-alvo="hero"     title="início · mauve"></button>
+  <button class="dot dot-projetos" data-alvo="projetos" title="projetos · peach"></button>
+  <button class="dot dot-sobre"    data-alvo="sobre"    title="sobre · teal"></button>
+  <button class="dot dot-sistema"  data-alvo="sistema"  title="sistema · green"></button>
+  <button class="dot dot-contato"  data-alvo="contato"  title="contato · lavender"></button>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="chip-mini" style="background:var(--bg)"   title="--bg"></span>
+  <span class="chip-mini" style="background:var(--text)" title="--text"></span>
+  <span class="chip-mini" style="background:var(--accent)" title="--accent"></span>
+  <span class="hex" id="hex-readout">#cba6f7</span>
+</aside>
+
+<nav>
+  <span class="brand">daneiel.dev</span>
+  <ul>
+    <li><a href="#projetos">Projetos</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="#sistema">Sistema</a></li>
+    <li><a href="#contato">Contato</a></li>
+  </ul>
+  <button id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">◐</button>
+</nav>
+
+<main>
+  <section id="hero">
+    <span class="kicker">engenharia de software · liderança técnica</span>
+    <h1>Daniel Souza constrói sistemas — e times — com a <em>calma</em> de quem desenha cada detalhe.</h1>
+    <p>Da arquitetura ao deploy: backends, APIs e cloud desenhados para durar, sustentados por times íntegros, maduros e de alta performance. Menos, porém melhor.</p>
+    <p class="hint">// navegue e observe a cor viajar</p>
+  </section>
+
+  <section id="projetos" class="block">
+    <span class="kicker">seleção</span>
+    <h2>Projetos</h2>
+
+    <div class="projeto">
+      <span class="num">01</span>
+      <h3>brabo</h3>
+      <span class="ano">2026</span>
+      <div class="desc"><div>
+        Um time de agentes de IA orquestra aplicações do briefing ao deploy — com autoridade humana por design. Nada com efeito externo acontece sozinho: cada commit, merge e comando passa por governança, política e auditoria. Liderança de times, agora aplicada a máquinas.
+        <span class="stack">nestjs · elixir/otp · react · kubernetes</span>
+      </div></div>
+    </div>
+
+    <div class="projeto">
+      <span class="num">02</span>
+      <h3>logger-masking</h3>
+      <span class="ano">github</span>
+      <div class="desc"><div>
+        Utilitário Java para mascarar dados sensíveis em logs — onde cada linha logada é um risco de vazamento. Segurança como padrão, não como remendo.
+        <span class="stack">java · logging · lgpd</span>
+      </div></div>
+    </div>
+
+    <div class="projeto">
+      <span class="num">03</span>
+      <h3>Operações críticas em escala</h3>
+      <span class="ano">2018—</span>
+      <div class="desc"><div>
+        Arquiteturas serverless e orientadas a eventos sustentando operações que não podem parar: Lambda, SQS, DynamoDB e Batch — construídas e mantidas com times que funcionam sob pressão.
+        <span class="stack">aws · node/typescript · python</span>
+      </div></div>
+    </div>
+
+    <div class="projeto">
+      <span class="num">04</span>
+      <h3>Este site</h3>
+      <span class="ano">2026</span>
+      <div class="desc"><div>
+        O primeiro artefato do meu design system: tokens visíveis, paletas mocha/papel e transições cênicas — a base visual das minhas próximas aplicações.
+        <span class="stack">css · design tokens · view transitions</span>
+      </div></div>
+    </div>
+  </section>
+
+  <section id="sobre" class="block">
+    <span class="kicker">sobre</span>
+    <h2>Menos ruído, mais intenção.</h2>
+    <p>Sou engenheiro de software em São Paulo e acredito que <strong>clareza é uma feature</strong> — no código e na liderança. Do requisito ao deploy, gosto de sistemas que envelhecem bem e de formar <strong>times íntegros, maduros e de alta performance</strong>, que entregam sob pressão sem perder a serenidade.</p>
+    <p>Este espaço não tem fotos nem fogos de artifício — tem <a class="inline" href="#sistema">um sistema</a> pensado para durar: de dia, papel; à noite, mocha.</p>
+    <ul class="trajetoria">
+      <li><span>2026—</span> SmartSky · desenvolvedor full stack</li>
+      <li><span>2022—25</span> TecBan · especialista de TI</li>
+      <li><span>2018—22</span> Dock · desenvolvedor → tech lead</li>
+    </ul>
+  </section>
+
+  <section id="sistema" class="block">
+    <span class="kicker">design system</span>
+    <h2>Os tokens à vista.</h2>
+    <div class="tokens">
+      <div class="token"><div class="chip" style="background:var(--bg)"></div><span class="label">--bg</span></div>
+      <div class="token"><div class="chip" style="background:var(--bg-deep)"></div><span class="label">--bg-deep</span></div>
+      <div class="token"><div class="chip" style="background:var(--surface)"></div><span class="label">--surface</span></div>
+      <div class="token"><div class="chip" style="background:var(--text)"></div><span class="label">--text</span></div>
+      <div class="token"><div class="chip" style="background:var(--muted)"></div><span class="label">--muted</span></div>
+      <div class="token"><div class="chip" style="background:var(--accent)"></div><span class="label">--accent</span></div>
+    </div>
+    <p class="nota-sistema">Cada seção assume um acento próprio da paleta — mauve, peach, teal, green, lavender — e o tema troca o mundo inteiro de cor sem trocar de identidade. Toque no ◐ lá em cima.</p>
+  </section>
+
+  <section id="contato" class="block">
+    <span class="kicker">contato</span>
+    <h2>Vamos conversar.</h2>
+    <div class="links">
+      <a href="mailto:daneoliveira.s@gmail.com">e-mail</a>
+      <a href="https://github.com/daneiel" target="_blank" rel="noopener">github</a>
+      <a href="https://www.linkedin.com/in/daneesouza/" target="_blank" rel="noopener">linkedin</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="pix">▚▞</span> feito com café e silêncio · 2026 <span class="pix">♥</span>
+</footer>
+
+<script>
+  // estado do tema em memória (sem storage)
+  let theme = 'dark';
+  const rootEl = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function applyTheme(next){
+    theme = next;
+    rootEl.setAttribute('data-theme', next);
+    btn.textContent = next === 'dark' ? '◐' : '◑';
+    if (typeof updateRail === 'function') updateRail();
+  }
+
+  btn.addEventListener('click', (e) => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    if (document.startViewTransition && !reduced) {
+      const x = e.clientX || innerWidth - 40, y = e.clientY || 30;
+      const t = document.startViewTransition(() => applyTheme(next));
+      t.ready.then(() => {
+        const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+        rootEl.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+          { duration: 750, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
+        );
+      });
+    } else {
+      applyTheme(next);
+    }
+  });
+
+  // a cor viaja: cada seção define o acento
+  const ACCENTS = {
+    hero:     { dark:'#cba6f7', light:'#8a6fae' },
+    projetos: { dark:'#fab387', light:'#b3703f' },
+    sobre:    { dark:'#94e2d5', light:'#49766c' },
+    sistema:  { dark:'#a6e3a1', light:'#5f7d4e' },
+    contato:  { dark:'#b4befe', light:'#6a6f9e' }
+  };
+  const hexEl = document.getElementById('hex-readout');
+  const dots = document.querySelectorAll('.token-rail .dot');
+
+  function updateRail(){
+    const sec = rootEl.getAttribute('data-section');
+    dots.forEach(d => d.classList.toggle('ativo', d.dataset.alvo === sec));
+    if (ACCENTS[sec]) hexEl.textContent = ACCENTS[sec][theme];
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (en.isIntersecting) {
+        rootEl.setAttribute('data-section', en.target.id);
+        updateRail();
+      }
+    }
+  }, { rootMargin: '-42% 0px -52% 0px' });
+  document.querySelectorAll('main section').forEach(s => observer.observe(s));
+
+  // os pontos do trilho também navegam
+  dots.forEach(d => d.addEventListener('click', () => {
+    document.getElementById(d.dataset.alvo)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+  }));
+
+  updateRail();
+</script>
+</body>
+</html>
