@@ -2,6 +2,19 @@
 const C=PetCore,form=document.querySelector('#editor'),ctx=document.querySelector('#preview').getContext('2d'),status=document.querySelector('#status');
 let config={...C.DEFAULT},mood='happy',paused=matchMedia('(prefers-reduced-motion: reduce)').matches,start=performance.now(),held=0;
 const message=t=>status.textContent=t;
+const speciesSelect=form.elements.namedItem('species'),breedSelect=form.elements.namedItem('breed');
+for(const entry of C.SPECIES){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.label;speciesSelect.append(option);}
+function populateBreeds(species,selected){
+ const entry=C.SPECIES.find(s=>s.id===species);breedSelect.replaceChildren();
+ for(const breed of entry.breeds){const option=document.createElement('option');option.value=breed.id;option.textContent=breed.label;breedSelect.append(option);}
+ breedSelect.value=entry.breeds.some(b=>b.id===selected)?selected:entry.breeds[0].id;
+ const field=document.querySelector('#pet-breed-field');field.hidden=entry.breeds.length<2;field.inert=field.hidden;
+ document.querySelector('#pet-breed-label').textContent=['bird','lizard'].includes(species)?'Tipo':'Raça / variedade';
+ const ears=form.elements.namedItem('ears').closest('label');ears.hidden=species!=='dog';ears.inert=ears.hidden;
+}
+speciesSelect.value=C.DEFAULT.species;populateBreeds(C.DEFAULT.species,C.DEFAULT.breed);
+speciesSelect.addEventListener('input',()=>populateBreeds(speciesSelect.value));
+
 const read=()=>C.validate({version:1,...Object.fromEntries(Object.keys(C.DEFAULT).filter(k=>k!=='version').map(k=>[k,form.elements.namedItem(k).value]))});
 function draw(ctx,c,m,f,renderer){if(renderer){renderer(ctx,c,m,f);renderer.effects?.(ctx,m,f);}else if(PetPhotoEditor.active&&PetPhotoEditor.hasArt)PetPhotoEditor.draw(ctx,m,f);else if(!PetPhotoEditor.active)C.draw(ctx,c,m,f);else ctx.clearRect(0,0,256,256);}
 function render(now){const elapsed=paused?held:now-start;draw(ctx,config,mood,PetPhotoEditor.active&&PetPhotoEditor.hasArt?PetPhotoCore.phaseAt(mood,Math.max(0,elapsed)):C.frameAt(mood,elapsed));}
@@ -19,7 +32,7 @@ document.querySelector('#download-json').addEventListener('click',safe(async (c,
 document.querySelector('#download-png').addEventListener('click',safe(async (c,renderer)=>{download(await png(mood,c,renderer),c.id+'-'+mood+'.png','image/png');message('PNG exportado: 2048 × 256, RGBA.');}));
 function instructions(c,photo){return '# '+c.name+' — ViraPets\n\n'+(photo?'Recorte pixelizado de foto local, com efeitos de latido e sono ancorados na cabeça, sem redesenho de expressões. A receita inclui a pixel art final e a marcação da cabeça, sem foto original ou EXIF.':'Arte procedural original.')+' Autor: '+c.author+'\n\nExtraia este ZIP na raiz do ViraPets preservando assets/pets/'+c.id+'/. Escolha um ID ainda não existente para evitar substituir arquivos. Com Python e Pillow instalados, execute na raiz:\n\n```sh\npython tools/pets.py deliver --pet '+c.id+'\n# Opcional: integrar os quadros do painel após deliver\npython tools/pets.py build --pet '+c.id+'\n```\n\nQuatro PNGs RGBA transparentes de 2048 × 256, oito quadros de 256 × 256. '+(photo?'Efeitos de latido e Zzz já estão nos PNGs. sleepSigns contém null para evitar duplicação.':'Zzz não está desenhado: as ferramentas adicionam os sinais conforme sleepSigns.')+' Timings seguem os defaults do projeto. Manifesto inicial draft. Importe assets/pets/'+c.id+'/recipe.json para editar novamente.\n';}
 document.querySelector('#download-zip').addEventListener('click',safe(async (c,renderer,photo)=>{const button=document.querySelector('#download-zip');button.disabled=true;message('Preparando as quatro animações…');try{const base='assets/pets/'+c.id+'/',files=[[base+'pet.json',json(photo?{...C.manifest(c),description:'Recorte pixelizado de foto local; movimento suave e efeitos visuais ancorados na cabeça.',sleepSigns:Array(8).fill(null)}:C.manifest(c))],[base+'recipe.json',json(photo?{...c,photo}:c)],['README.md',instructions(c,photo)]];for(const m of C.MOODS)files.push([base+'sprites/'+m+'.png',await png(m,c,renderer)]);download(C.zipStore(files),c.id+'-virapets.zip','application/zip');message('Pacote exportado. Siga o README incluído.');}finally{button.disabled=false;}}));
-document.querySelector('#import').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>450000)throw Error('Máximo de 450 KB.');const raw=JSON.parse(await file.text()),imported=C.validate(raw);if(raw.photo)await PetPhotoEditor.importRecipe(raw.photo);else PetPhotoEditor.setMode(false);for(const key of Object.keys(C.DEFAULT))if(key!=='version')form.elements.namedItem(key).value=imported[key];config=imported;update();message('Receita importada.');}catch(e){message('Importação recusada: '+e.message);}finally{event.target.value='';}});
+document.querySelector('#import').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>450000)throw Error('Máximo de 450 KB.');const raw=JSON.parse(await file.text()),imported=C.validate(raw);if(raw.photo)await PetPhotoEditor.importRecipe(raw.photo);else PetPhotoEditor.setMode(false);speciesSelect.value=imported.species;populateBreeds(imported.species,imported.breed);for(const key of Object.keys(C.DEFAULT))if(key!=='version')form.elements.namedItem(key).value=imported[key];config=imported;update();message('Receita importada.');}catch(e){message('Importação recusada: '+e.message);}finally{event.target.value='';}});
 
 // The embedded source keeps the prompt usable on file://, without fetching.
 const promptText=document.querySelector('#prompt-text');
