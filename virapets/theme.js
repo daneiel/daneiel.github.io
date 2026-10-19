@@ -1,0 +1,4 @@
+'use strict';
+(()=>{const system=matchMedia('(prefers-color-scheme: dark)');let choice;try{choice=localStorage.getItem('virapets.theme');}catch{}
+if(choice!=='light'&&choice!=='dark')choice=null;
+const apply=()=>{const theme=choice||(system.matches?'dark':'light');document.documentElement.dataset.theme=theme;const button=document.querySelector('#theme-toggle');if(button){button.textContent=theme==='dark'?'Tema claro':'Tema escuro';button.setAttribute('aria-pressed',String(theme==='dark'));button.setAttribute('aria-label',theme==='dark'?'Ativar tema claro':'Ativar tema escuro');}};apply();system.addEventListener('change',apply);document.addEventListener('DOMContentLoaded',()=>{apply();document.querySelector('#theme-toggle').addEventListener('click',()=>{choice=document.documentElement.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('virapets.theme',choice);}catch{}apply();});});})();

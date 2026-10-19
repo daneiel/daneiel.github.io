@@ -1,0 +1,5 @@
+/* BRABO design/tokens.css, ADR 0181: semantic subset, literal resolved values.
+   Source: BRABO repository, design/tokens.css.
+   System fonts only; no font assets or remote requests. */
+:root{color-scheme:dark;--surface-0:#0d0d0f;--surface-1:#141417;--surface-2:#1c1c21;--text-primary:#ececef;--text-secondary:#a1a1aa;--text-muted:#86868f;--accent:#c8744f;--accent-hover:#d98b68;--on-accent:#0d0d0f;--border:#2a2a30;--border-strong:#3a3a42;--code-bg:#0a0a0c}
+[data-theme=light]{color-scheme:light;--surface-0:#ffffff;--surface-1:#fafafa;--surface-2:#f4f4f5;--text-primary:#18181b;--text-secondary:#52525b;--text-muted:#696972;--accent:#a4502c;--accent-hover:#86401f;--on-accent:#ffffff;--border:#e4e4e7;--border-strong:#d4d4d8;--code-bg:#f4f4f5}
