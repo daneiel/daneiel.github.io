@@ -10,3 +10,8 @@
 .studio{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.studio>section{min-width:0}#species-fields .small{font-size:12px;color:var(--text-secondary)}@media(max-width:760px){.studio{grid-template-columns:minmax(0,1fr)}}
 
 #theme-toggle{display:inline-flex;align-items:center;gap:9px;border:2px solid var(--accent);box-shadow:0 0 0 3px var(--surface-2);color:var(--accent);font-weight:700}#theme-toggle svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}@media(max-width:760px){#theme-toggle{padding:9px 11px;min-height:46px}}
+
+/* Hidden mode roots must never retain layout or focusable descendants. */
+#procedural-editor[hidden],#photo-output[hidden],.studio[hidden]{display:none!important}
+#photo-output .studio{margin-top:28px}#photo-output .preview{align-self:start}.shared-recipe{display:flex;justify-content:flex-start}.shared-recipe .import{display:inline-flex;gap:6px;margin:12px 0 0;font-size:12px;min-height:32px}.shared-recipe .import input{max-width:100%}#photo-output .controls{min-width:0}
+@media(max-width:760px){#photo-output .moods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#photo-output .moods button{min-width:0}#photo-output .stage{min-width:0}#photo-output #preview{max-width:100%;height:auto}}
