@@ -36,9 +36,29 @@ async function init(id) {
   })().catch(error => { initialization = undefined; throw error; });
   await initialization;
 }
+// Object mode favors extent only among credible candidates satisfying every click.
+// It is a heuristic: SlimSAM may still need extra positive/negative prompts.
+function chooseCandidate(data, scores, width, height, points, selectionMode = 'object') {
+  const size = width * height;
+  const candidates = Array.from(scores, (score, index) => {
+    const start = index * size;
+    let area = 0;
+    for (let p = 0; p < size; p++) if (data[start + p]) area++;
+    const respectsPoints = points.every(([x, y, label]) => +!!data[start + Math.floor(y) * width + Math.floor(x)] === label);
+    return { index, score: Number.isFinite(score) ? score : -1, area, respectsPoints };
+  });
+  const valid = candidates.filter(c => c.respectsPoints);
+  // Never silently return a mask contradicting explicit prompts.
+  if (!valid.length) throw Error('Nenhuma máscara respeitou todos os pontos. Ajuste os pontos e tente novamente.');
+  const highest = valid.reduce((a, b) => b.score > a.score ? b : a);
+  const credible = valid.filter(c => c.score >= Math.max(0.5, highest.score - 0.15));
+  const chosen = selectionMode === 'detail' || !credible.length ? highest : credible.reduce((a, b) => b.area > a.area || (b.area === a.area && b.score > a.score) ? b : a);
+  return { chosen: chosen.index, candidates };
+}
 async function segment(id, request) {
   if (!model || !processor) throw Error('Inicialize o modelo antes de segmentar.');
-  const { pixels, width, height, points, imageId } = request;
+  const { pixels, width, height, points, imageId, selectionMode = 'object' } = request;
+  if (!['object', 'detail'].includes(selectionMode)) throw Error('Modo de seleção inválido.');
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 16777216 || !(pixels instanceof Uint8ClampedArray) || pixels.length !== width * height * 4) throw Error('Pixels ou dimensões inválidos.');
   if (!Array.isArray(points) || !points.length || points.length > 128 || points.some(p => !Array.isArray(p) || p.length !== 3 || !Number.isFinite(p[0]) || !Number.isFinite(p[1]) || p[0] < 0 || p[0] >= width || p[1] < 0 || p[1] >= height || ![0, 1].includes(p[2]))) throw Error('Pontos inválidos.');
   // Without an explicit identity always recompute; callers must change imageId when pixels change.
@@ -58,12 +78,14 @@ async function segment(id, request) {
   try {
     output = await model({ ...embeddings, input_points, input_labels });
     const scores = output.iou_scores.data;
-    let best = 0;
-    for (let i = 1; i < scores.length; i++) if (scores[i] > scores[best]) best = i;
     const masks = await processor.post_process_masks(output.pred_masks, image.original_sizes, image.reshaped_input_sizes);
-    const mask = Uint8Array.from(masks[0].data.subarray(best * width * height, (best + 1) * width * height));
-    for (const item of masks) item.dispose?.();
-    self.postMessage({ id, type: 'result', mask, width, height }, [mask.buffer]);
+    let mask, candidateSummary;
+    try {
+      candidateSummary = chooseCandidate(masks[0].data, scores, width, height, points, selectionMode);
+      const best = candidateSummary.chosen;
+      mask = Uint8Array.from(masks[0].data.subarray(best * width * height, (best + 1) * width * height), value => +!!value);
+    } finally { for (const item of masks) item.dispose?.(); }
+    self.postMessage({ id, type: 'result', mask, width, height, candidateSummary }, [mask.buffer]);
   } finally {
     input_points.dispose?.(); input_labels.dispose?.();
     for (const value of Object.values(output || {})) value.dispose?.();

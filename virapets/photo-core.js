@@ -68,14 +68,80 @@
     for (var gy = 0; gy < grid; gy++) for (var gx = 0; gx < grid; gx++) { var color = painted[gy * grid + gx]; if (color < 0) continue; for (var dy = 16 + Math.floor(gy * 224 / grid); dy < 16 + Math.floor((gy + 1) * 224 / grid); dy++) for (var dx = 16 + Math.floor(gx * 224 / grid); dx < 16 + Math.floor((gx + 1) * 224 / grid); dx++) { var offset = (dy * 256 + dx) * 4; output.set(palette[color], offset); output[offset + 3] = 255; } }
     return {data: output, width: 256, height: 256, palette: Array.from(new Set(palette.map(function (p) { return '#' + p.map(function (v) { return v.toString(16).padStart(2, '0'); }).join(''); })))};
   }
-  // Eight looping affine cutout poses per mood; expressions are never redrawn.
-  function drawFrame(ctx, sourceCanvas, mood, frame) {
-    var moods = ['happy', 'barking', 'waiting', 'sleeping'];
-    if (!ctx || typeof ctx.drawImage !== 'function' || !sourceCanvas || !Number.isFinite(sourceCanvas.width) || !Number.isFinite(sourceCanvas.height) || sourceCanvas.width <= 0 || sourceCanvas.height <= 0 || !moods.includes(mood) || !Number.isInteger(frame) || frame < 0 || frame > 7) throw new RangeError('Invalid animation frame');
-    var phase = frame * Math.PI / 4, sin = Math.sin(phase), cos = Math.cos(phase), fit = 232 / Math.max(sourceCanvas.width, sourceCanvas.height);
-    var amplitude = {happy: 2, barking: 3, waiting: 1, sleeping: 0.6}[mood];
-    ctx.save();
-    try { ctx.clearRect(0, 0, 256, 256); ctx.imageSmoothingEnabled = false; ctx.translate(128 + sin * amplitude, 128 + cos * amplitude); ctx.rotate(sin * amplitude * 0.008); ctx.scale(fit * (1 + cos * amplitude * 0.004), fit * (1 - cos * amplitude * 0.004)); ctx.drawImage(sourceCanvas, -sourceCanvas.width / 2, -sourceCanvas.height / 2); } finally { ctx.restore(); }
+  var timings = {
+    happy: [240,96,96,80,80,96,96,176],
+    barking: [360,64,64,160,128,64,64,240],
+    waiting: [1440,120,80,80,80,80,120,400],
+    sleeping: [1000,180,240,650,220,400,250,800]
+  };
+  // x, y, rotation, horizontal stretch, vertical stretch. Interpolate the whole
+  // cutout, retaining every original facial pixel. Final pose returns to first.
+  var poses = {
+    happy: [[0,2,0,1.015,.985],[-2,0,-.015,1,1],[-3,-4,-.03,.99,1.02],[0,-7,0,.98,1.025],[3,-4,.03,.99,1.02],[2,1,.015,1.025,.98],[0,3,0,1.035,.97],[-1,1,-.008,1,1]],
+    barking: [[0,1,0,1,1],[-3,3,-.025,1.025,.97],[-5,4,-.04,1.035,.96],[5,-3,.035,.97,1.035],[2,-1,.015,.99,1.015],[-2,2,-.018,1.02,.98],[1,0,.008,1,1],[0,2,0,1.01,.99]],
+    waiting: [[0,1,0,1,.995],[.4,.3,.002,1.002,1],[.7,-.4,.004,1.004,1.004],[.9,-1,.005,1.005,1.008],[.6,-.5,.003,1.003,1.005],[.2,.1,.001,1.001,1.001],[-.2,.7,-.001,1,.997],[-.3,1.3,-.002,1,.993]],
+    sleeping: [[0,2,.015,1.01,.99],[1,3,.025,1.015,.985],[2,5,.045,1.02,.975],[2.5,6,.055,1.025,.97],[-1,-4,-.025,.98,1.035],[-.5,-1,-.01,.995,1.01],[0,1,.005,1.005,.995],[.3,2.5,.02,1.012,.988]]
+  };
+  function validate(mood, frame) {
+    if (!Object.prototype.hasOwnProperty.call(timings, mood) || !Number.isFinite(frame) || frame < 0 || frame >= 8) throw new RangeError('Invalid animation frame');
   }
-  return {pixelize: pixelize, paintMask: paintMask, drawFrame: drawFrame};
+  function phaseAt(mood, elapsed) {
+    if (!Object.prototype.hasOwnProperty.call(timings, mood) || !Number.isFinite(elapsed) || elapsed < 0) throw new RangeError('Invalid animation time');
+    var durations = timings[mood], total = durations.reduce(function (a,b) { return a+b; },0), time = elapsed % total;
+    for (var i=0;i<8;i++) { if (time < durations[i]) return i + time / durations[i]; time -= durations[i]; }
+    return 0;
+  }
+  function geometry(sourceCanvas, mood, frame) {
+    validate(mood, frame);
+    if (!sourceCanvas || !Number.isFinite(sourceCanvas.width) || !Number.isFinite(sourceCanvas.height) || sourceCanvas.width <= 0 || sourceCanvas.height <= 0) throw new RangeError('Invalid animation source');
+    var index = Math.floor(frame), blend = (1-Math.cos((frame-index)*Math.PI))/2;
+    var pose = poses[mood][index].map(function (v,c) { return v+(poses[mood][(index+1)%8][c]-v)*blend; });
+    var x=pose[0], y=pose[1], angle=pose[2], sx=pose[3], sy=pose[4];
+    // Bound even fully opaque, non-square inputs, including rotated corners.
+    var c=Math.abs(Math.cos(angle)), s=Math.abs(Math.sin(angle));
+    var halfW=sourceCanvas.width*sx/2, halfH=sourceCanvas.height*sy/2;
+    var fit=Math.min(224/Math.max(sourceCanvas.width,sourceCanvas.height), (111-Math.abs(x))/(c*halfW+s*halfH), (111-Math.abs(y))/(s*halfW+c*halfH));
+    return {x:128+x,y:128+y,angle:angle,sx:fit*sx,sy:fit*sy};
+  }
+  function transformPoint(sourceCanvas,mood,frame,point) {
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) throw new RangeError('Invalid anchor');
+    var g=geometry(sourceCanvas,mood,frame), x=point.x-sourceCanvas.width/2, y=point.y-sourceCanvas.height/2;
+    return {x:g.x+x*g.sx*Math.cos(g.angle)-y*g.sy*Math.sin(g.angle), y:g.y+x*g.sx*Math.sin(g.angle)+y*g.sy*Math.cos(g.angle), radius:(Number.isFinite(point.radius)?point.radius:45)*Math.max(g.sx,g.sy), side:point.side};
+  }
+  function drawFrame(ctx,sourceCanvas,mood,frame) {
+    if (!ctx || typeof ctx.drawImage !== 'function') throw new RangeError('Invalid animation context');
+    var g=geometry(sourceCanvas,mood,frame);
+    ctx.save();
+    try { ctx.clearRect(0,0,256,256); ctx.imageSmoothingEnabled=false; ctx.translate(g.x,g.y); ctx.rotate(g.angle); ctx.scale(g.sx,g.sy); ctx.drawImage(sourceCanvas,-sourceCanvas.width/2,-sourceCanvas.height/2); } finally { ctx.restore(); }
+  }
+  // Optional preview decoration. PNG strips call drawFrame alone.
+  function drawEffects(ctx, mood, frame, anchor) {
+    validate(mood, frame);
+    if (!ctx || typeof ctx.fillRect !== 'function') throw new RangeError('Invalid effects context');
+    anchor=anchor || {x:128,y:95,radius:45};
+    if (![anchor.x,anchor.y,anchor.radius].every(Number.isFinite) || anchor.radius<0 || (anchor.side!==undefined && anchor.side!=='auto' && anchor.side!=='left' && anchor.side!=='right')) throw new RangeError('Invalid effects anchor');
+    var side=anchor.side==='left'?-1:1;
+    if (anchor.x+side*(anchor.radius+35)>248 || anchor.x+side*(anchor.radius+35)<8) side=-side;
+    function rectangle(x,y,w,h) {ctx.fillRect(Math.max(4,Math.min(252-w,x)),Math.max(4,Math.min(252-h,y)),w,h);}
+    ctx.save();
+    try {
+      ctx.fillStyle='#cdb8f6' // Adjacent lilac avoids the terminal pipeline's legacy reserved Zzz color.
+;
+      if (mood === 'barking' && frame >= 2.5 && frame < 5) {
+        var strength=Math.sin((frame-2.5)/2.5*Math.PI), offset=8*strength;
+        ctx.globalAlpha=strength;
+        [[212,91,9,3],[218,109,11,3],[213,127,9,3]].forEach(function (r) {rectangle(anchor.x+side*(anchor.radius+12+(r[0]-212)+offset)-(side<0?r[2]:0),anchor.y+r[1]-109,r[2],r[3]);});
+      }
+      if (mood === 'sleeping' && (frame < 4 || frame >= 6)) {
+        var visibility=frame<3?1:frame<4?(1+Math.cos((frame-3)*Math.PI))/2:frame<7?(1-Math.cos((frame-6)*Math.PI))/2:1;
+        for (var n=0;n<3;n++) {
+          var drift=(frame/8+n/3)%1, size=2+n*.5, x=anchor.x+side*(anchor.radius+12+n*13), y=anchor.y-10-drift*38;
+          x=Math.max(4,Math.min(252-3*size,x));y=Math.max(4,Math.min(252-5*size,y));ctx.globalAlpha=visibility*Math.sin(drift*Math.PI)*.85;
+          // Five-row pixel Z, matching the existing pastel-purple glyphs.
+          ['111','001','010','100','111'].forEach(function(row,ry){for(var rx=0;rx<3;rx++)if(row[rx]==='1')rectangle(x+rx*size,y+ry*size,size,size);});
+        }
+      }
+    } finally {ctx.restore();}
+  }
+  return {pixelize:pixelize, paintMask:paintMask, drawFrame:drawFrame, phaseAt:phaseAt, drawEffects:drawEffects, transformPoint:transformPoint};
 });
